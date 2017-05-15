@@ -27,6 +27,30 @@ int  fw_sz      = 0;
 
 int spi_flash_fd;
 
+#if 0
+char timestamp[256];
+char* get_timestamp(void)
+{
+	time_t now;
+	struct tm *timenow;
+	char strtemp[255];
+  
+	time(&now);
+	timenow = localtime(&now);
+	sprintf(timestamp, "%s", asctime(timenow));
+	return timestamp;
+}
+
+#define debug_info(fmt, args...) do { \
+		char log[256]; \
+		char time_s[26]; \
+		strcpy(time_s, get_timestamp()); \
+		time_s[25] = '\0'; \
+		sprintf(log, fmt, ##args); \
+		printf("[%s] %s", time_s, log); \
+} while (0)
+#endif
+
 void correct_version(uint32_t *version)
 {
     uint32_t older_ver = *version;
@@ -191,6 +215,9 @@ int main( int argc, char** argv )
 	uint32_t fw_version = 0;
 	uint32_t dsp_version = 0;
 
+	int time_start = 0;
+	int time_end   = 0;
+
 	printf("================================================================\n");
 	printf("===================    Upgrade DSP Firmware    =================\n");
 	printf("================================================================\n");
@@ -240,18 +267,18 @@ int main( int argc, char** argv )
 	get_dsp_version(&dsp_version);
 	get_fw_version(&fw_version);
 
-	printf("-------------------------------\n");
-	printf("-> get dsp version: %d.%d.%d <-\n",
+	printf("\t----------------------------\n");
+	printf("\t-> get dsp version: %d.%d.%d <-\n",
 		(dsp_version>>24)&0xFF,
 		(dsp_version>>16)&0xFF,
 		(dsp_version)&0xFF
 		);
-	printf("-> get fw  version: %d.%d.%d <-\n",
+	printf("\t-> get fw  version: %d.%d.%d <-\n",
 		(fw_version>>24)&0xFF,
 		(fw_version>>16)&0xFF,
 		(fw_version)&0xFF
 		);
-	printf("-------------------------------\n");
+	printf("\t----------------------------\n");
 
 	/* 4, write the fw to SPI Flash */
 	printf("open spi flash device point(%s)...\n", FLASH_DEV_NODE);
@@ -272,11 +299,13 @@ int main( int argc, char** argv )
 	}
 #else
 	printf("start to upgrade the firmware...\n");
+	time_start = time((time_t*)NULL);
     ret = write(spi_flash_fd, fw_dt, fw_sz);
     if (ret != fw_sz) {
         printf("Update flash failed\n");
         ret = -1;
     }
+	time_end = time((time_t*)NULL);
 	sleep(1);
 #endif
 
@@ -286,6 +315,7 @@ exit:
 	if (fw_dt)
 		free(fw_dt);
 	uninstall_kernel_module(module);
+	printf("===================== spend %4d seconds =======================\n", (time_end-time_start));
 	printf("===================== upgrade success ==========================\n");
 	return 0;
 
