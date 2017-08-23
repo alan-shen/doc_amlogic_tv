@@ -40,14 +40,23 @@ dump_one_reg_of_audio_out () {
 	dump_one_register ${REG_AUDIOOUT} ${2}
 }
 
-printf "\n------ AUDIO IN REG LIST -----\n\n"
-for ((i=0x00; i<=0xc1; i++))
-do
-	dump_one_reg_of_audio_in ${i} ${i}
-done
+dump_reg_addr_list () {
+	printf "\n------ AUDIO IN REG LIST -----\n\n"
+	for ((i=0x00; i<=0xc1; i++))
+	do
+		dump_one_reg_of_audio_in ${i} ${i}
+	done
 
-printf "\n------ AUDIO OUT REG LIST -----\n\n"
-for ((i=0x00; i<=0xab; i++))
+	printf "\n------ AUDIO OUT REG LIST -----\n\n"
+	for ((i=0x00; i<=0xab; i++))
+	do
+		dump_one_reg_of_audio_out ${i} ${i}
+	done
+}
+
+AUDIO_IN_DUMP_LIST="0x00 0x01 0x02 0x03 0x44"
+
+for offset in ${AUDIO_IN_DUMP_LIST}
 do
-	dump_one_reg_of_audio_out ${i} ${i}
+	dump_one_reg_of_audio_in ${offset} ${offset}
 done
